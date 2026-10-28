@@ -1,0 +1,56 @@
+{
+	"name": "edamax-adaptive-pour",
+	"uuid": "cbec69e25f8d4d8fb9708fc83e54539d",
+	"displayName": "EDAMax 多层自适应铺铜",
+	"description": "焊盘移动后自动重建受影响铜层，并通过严格 DRC 验证铺铜结果。",
+	"version": "0.1.0",
+	"publisher": "EDAMax",
+	"engines": {
+		"eda": "^3.0.0"
+	},
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "extension-store",
+		"url": ""
+	},
+	"categories": "PCB",
+	"keywords": [
+		"PCB",
+		"Copper",
+		"DRC",
+		"Multilayer"
+	],
+	"images": {
+		"logo": "./images/logo.png"
+	},
+	"homepage": "",
+	"bugs": "",
+	"activationEvents": {},
+	"entry": "./dist/index",
+	"dependentExtensions": {},
+	"headerMenus": {
+		"pcb": [
+			{
+				"id": "adaptivePour",
+				"title": "智能铺铜",
+				"menuItems": [
+					{
+						"id": "rebuildAll",
+						"title": "重建全部铜层并检查 DRC",
+						"registerFn": "rebuildAllCopper"
+					},
+					{
+						"id": "toggleAuto",
+						"title": "切换焊盘移动自动重铺",
+						"registerFn": "toggleAutomaticRebuild"
+					},
+					{
+						"id": "About",
+						"title": "关于 EDAMax 智能铺铜...",
+						"registerFn": "about"
+					}
+				]
+			}
+		]
+	}
+}

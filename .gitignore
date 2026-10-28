@@ -1,0 +1,9 @@
+node_modules/
+public/
+data/
+__pycache__/
+*.py[cod]
+.env
+*.eext
+build/
+dist/

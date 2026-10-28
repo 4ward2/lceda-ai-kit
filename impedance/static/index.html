@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<title>Impedance panel · 阻抗计算</title>
+<style>
+/* Ant Design palette (primary #1890ff), with a dark mode. */
+:root{
+  --brand:#1890ff; --brand-weak:#e6f7ff; --brand-dark:#096dd9;
+  --bg:#f0f2f5; --panel:#ffffff; --panel-2:#fafafa; --border:#d9d9d9;
+  --t1:#262626; --t2:#595959; --t3:#8c8c8c; --canvas:#222222;
+  --ok:#52c41a; --warn:#faad14; --danger:#ff4d4f; --shadow:0 1px 2px rgba(0,0,0,.06);
+}
+html[data-theme="dark"]{
+  --brand:#177ddc; --brand-weak:#111d2c; --brand-dark:#3c9ae8;
+  --bg:#141414; --panel:#1f1f1f; --panel-2:#262626; --border:#434343;
+  --t1:#e6e6e6; --t2:#a6a6a6; --t3:#737373; --canvas:#222222;
+  --ok:#49aa19; --warn:#d89614; --danger:#d32029; --shadow:0 1px 2px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--t1);
+  font:13px/1.6 -apple-system,"Segoe UI","Microsoft YaHei",sans-serif}
+header{height:48px;background:var(--panel);border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:16px;padding:0 16px;box-shadow:var(--shadow)}
+.logo{font-weight:600;font-size:15px;color:var(--brand)}
+.tabs{display:flex;gap:2px;margin-left:8px}
+.tab{padding:6px 16px;border-radius:2px;cursor:pointer;color:var(--t2);user-select:none}
+.tab:hover{color:var(--brand);background:var(--brand-weak)}
+.tab.on{color:var(--brand);background:var(--brand-weak);font-weight:500}
+.grow{flex:1}
+.stat{color:var(--t3);font-size:12px}
+button{font:inherit;padding:5px 14px;border:1px solid var(--border);border-radius:2px;
+  background:var(--panel);color:var(--t1);cursor:pointer}
+button:hover{border-color:var(--brand);color:var(--brand)}
+button.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+button.primary:hover{background:var(--brand-dark);color:#fff}
+input,select{font:inherit;padding:5px 10px;border:1px solid var(--border);border-radius:2px;
+  background:var(--panel);color:var(--t1);outline:none}
+input:focus{border-color:var(--brand)}
+main{padding:16px;max-width:1280px;margin:0 auto}
+.page{display:none} .page.on{display:block}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:2px;
+  padding:16px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card h3{margin:0 0 12px;font-size:14px;font-weight:600}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:8px;border-bottom:1px solid var(--border);
+  color:var(--t2);font-weight:500;background:var(--panel-2)}
+td{padding:7px 8px;border-bottom:1px solid var(--border)}
+tr:hover td{background:var(--brand-weak)}
+.mono{font-family:Consolas,monospace}
+.link{color:var(--brand);cursor:pointer}
+.tag{display:inline-block;padding:1px 7px;border-radius:2px;font-size:11px;
+  border:1px solid;margin-right:4px}
+.tag.swap{color:var(--ok);border-color:var(--ok);background:transparent}
+.tag.review{color:var(--warn);border-color:var(--warn)}
+.tag.package{color:var(--t3);border-color:var(--border)}
+.muted{color:var(--t3)}
+.chat{height:calc(100vh - 210px);display:flex;flex-direction:column}
+.msgs{flex:1;overflow:auto;padding:4px}
+.msg{margin:10px 0;display:flex;gap:10px}
+.who{width:52px;flex:none;color:var(--t3);font-size:12px;text-align:right}
+.body{flex:1;white-space:pre-wrap;background:var(--panel-2);border:1px solid var(--border);
+  border-radius:2px;padding:9px 12px}
+.msg.me .body{background:var(--brand-weak);border-color:var(--brand)}
+.hint{color:var(--t3);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+  <span class="logo">Impedance · 阻抗计算</span>
+  <span class="grow"></span>
+  <span class="stat" id="stat"></span>
+  <button id="theme">深色</button>
+</header>
+<main>
+  <div class="card">
+    <h3>目标阻抗 → 线宽 / Target impedance → trace width</h3>
+    <div class="row">
+      <label>叠层</label><select id="zs"></select>
+      <label>目标阻抗</label><input id="zt" value="50" style="width:80px" /><span class="muted">Ω</span>
+      <label>层</label><input id="zl" value="1" style="width:60px" />
+      <label><input type="checkbox" id="zd" /> 差分</label>
+      <label>线距</label><input id="zg" value="6" style="width:70px" /><span class="muted">mil</span>
+      <button class="primary" id="zgo">反解线宽</button>
+    </div>
+    <div class="hint">离线求解（IPC-2141A 闭式公式），叠层来自你提供的 JSON 文件。结果是起始线宽，落板前请与板厂核对。
+      Offline IPC-2141A solve over your own stackup file; confirm the result with your fab.</div>
+  </div>
+  <div class="card" id="imp-out"><span class="muted">选好参数后点「反解线宽」。</span></div>
+</main>
+
+<script>
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const get = async (u) => (await fetch(u)).json();
+const post = async (u, b) => (await fetch(u, {method:'POST',
+  headers:{'Content-Type':'application/json'}, body:JSON.stringify(b)})).json();
+const MODES = {microstrip: '外层微带 microstrip', stripline: '对称带状线 stripline',
+  'stripline-asym': '非对称带状线 asymmetric stripline'};
+
+$('#theme').onclick = () => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  $('#theme').textContent = dark ? '深色' : '浅色';
+  localStorage.setItem('theme', dark ? 'light' : 'dark');
+};
+if (localStorage.getItem('theme') === 'dark') $('#theme').click();
+
+get('/api/stackups').then(d => {
+  const rows = d.stackups || [];
+  $('#zs').innerHTML = rows.map(s =>
+    `<option value="${esc(s.name)}">${esc(s.name)} · ${esc(s.layers)}层 · ${esc(s.thicknessMm)}mm</option>`).join('');
+  $('#stat').textContent = d.error ? d.error : `${rows.length} 个叠层`;
+});
+
+function row(k, v) { return `<tr><th style="width:160px">${esc(k)}</th><td class="mono">${esc(v)}</td></tr>`; }
+
+$('#zgo').onclick = async () => {
+  $('#imp-out').innerHTML = '<span class="muted">计算中…</span>';
+  const diff = $('#zd').checked;
+  const d = await post('/api/impedance', {
+    stackup: $('#zs').value, target: parseFloat($('#zt').value), layer: parseInt($('#zl').value),
+    diff, spacing: diff ? parseFloat($('#zg').value) : 0 });
+  if (d.error) { $('#imp-out').innerHTML = `<span style="color:var(--danger)">${esc(d.error)}</span>`; return; }
+  const r = d.result, um = mil => (mil * 25.4).toFixed(1) + ' um';
+  $('#imp-out').innerHTML = `<h3>${esc(d.stackup)} · L${esc($('#zl').value)}</h3><table>` +
+    row('结构 / structure', `${MODES[r.mode] || r.mode}（${r.layers} 铜层）`) +
+    row('介质 / dielectric', `Er ${r.er.toFixed(3)} · ${(r.h * 1000).toFixed(1)} um` + (r.hFar ? ` / 远端 ${(r.hFar * 1000).toFixed(1)} um` : '')) +
+    row('导体 / copper', `${(r.t * 1000).toFixed(1)} um（${r.copperOz} oz）`) +
+    row('线宽（底） / width (bottom)', `${r.widthMil.toFixed(3)} mil = ${um(r.widthMil)}`) +
+    row('线宽（顶） / width (top)', `${r.widthTopMil.toFixed(3)} mil = ${um(r.widthTopMil)}（蚀刻补偿 ${r.etchDeltaMil.toFixed(2)} mil）`) +
+    row('单端 Z0', `${r.z0.toFixed(2)} Ω`) +
+    (r.zdiff ? row('线距 / spacing', `${r.spacingMil.toFixed(3)} mil = ${um(r.spacingMil)}`) + row('差分 Zdiff', `${r.zdiff.toFixed(2)} Ω`) : '') +
+    '</table>';
+};
+</script>
+</body>
+</html>

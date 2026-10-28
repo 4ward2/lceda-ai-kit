@@ -1,0 +1,41 @@
+{
+  "note": "EXAMPLE ONLY. Hand-written, plausible values for trying the solver. They are not any fab's stackup data. Replace them with the stackup your fab publishes before routing a real board.",
+  "stackups": [
+    {
+      "name": "EXAMPLE-4L-1.6",
+      "layers": 4,
+      "thicknessMm": 1.6,
+      "outerCopperOz": 1.0,
+      "innerCopperOz": 0.5,
+      "stack": [
+        { "name": "L1 signal", "conductorMm": 0.035 },
+        { "name": "prepreg", "material": "prepreg", "dielectricMm": 0.20, "er": 4.2 },
+        { "name": "core L2/L3", "core": true, "conductorMm": 0.0175, "dielectricMm": 1.10, "er": 4.5 },
+        { "name": "prepreg", "material": "prepreg", "dielectricMm": 0.20, "er": 4.2 },
+        { "name": "L4 signal", "conductorMm": 0.035 }
+      ]
+    },
+    {
+      "name": "EXAMPLE-6L-1.6",
+      "layers": 6,
+      "thicknessMm": 1.6,
+      "outerCopperOz": 1.0,
+      "innerCopperOz": 0.5,
+      "stack": [
+        { "name": "L1 signal", "conductorMm": 0.035 },
+        { "name": "prepreg", "material": "prepreg", "dielectricMm": 0.10, "er": 4.1 },
+        { "name": "core L2/L3", "core": true, "conductorMm": 0.0175, "dielectricMm": 0.50, "er": 4.5 },
+        { "name": "prepreg", "material": "prepreg", "dielectricMm": 0.26, "er": 4.2 },
+        { "name": "core L4/L5", "core": true, "conductorMm": 0.0175, "dielectricMm": 0.50, "er": 4.5 },
+        { "name": "prepreg", "material": "prepreg", "dielectricMm": 0.10, "er": 4.1 },
+        { "name": "L6 signal", "conductorMm": 0.035 }
+      ]
+    }
+  ],
+  "etchCompensation": [
+    { "layer": "outer", "copperOz": 1.0, "widthDeltaMil": 1.0 },
+    { "layer": "outer", "copperOz": 2.0, "widthDeltaMil": 2.0 },
+    { "layer": "inner", "copperOz": 0.5, "widthDeltaMil": 0.5 },
+    { "layer": "inner", "copperOz": 1.0, "widthDeltaMil": 0.8 }
+  ]
+}
